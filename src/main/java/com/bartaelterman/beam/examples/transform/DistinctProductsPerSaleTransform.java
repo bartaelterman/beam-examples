@@ -92,11 +92,6 @@ public class DistinctProductsPerSaleTransform extends PTransform<PCollection<Str
                 // Set session windows on the sale ID, because we will want to aggregate all
                 // products per sale
                 .apply(Window.<KV<String, String>>into(Sessions.withGapDuration(Duration.standardSeconds(WINDOWGAPDURATION)))
-//                        .triggering(Repeatedly.forever(AfterProcessingTime
-//                                .pastFirstElementInPane()
-//                                .plusDelayOf(Duration.standardSeconds(TRIGGERINGTIME))
-//                        ).orFinally(AfterWatermark.pastEndOfWindow()))
-//                        .accumulatingFiredPanes()
                         .withAllowedLateness(Duration.ZERO))
                 // Apply the custom DistinctProductsFunc. A Combine function that will
                 // aggregate all products per window, and return the distinct product IDs
