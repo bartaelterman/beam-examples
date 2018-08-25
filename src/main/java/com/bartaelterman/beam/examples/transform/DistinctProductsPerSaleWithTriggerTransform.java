@@ -98,7 +98,7 @@ public class DistinctProductsPerSaleWithTriggerTransform extends PTransform<PCol
                                 .plusDelayOf(Duration.standardSeconds(TRIGGERINGTIME))
                         ).orFinally(AfterWatermark.pastEndOfWindow()))
                         .accumulatingFiredPanes()
-                        .withAllowedLateness(Duration.ZERO))
+                        .withAllowedLateness(Duration.standardSeconds(10)))
                 // Apply the custom DistinctProductsFunc. A Combine function that will
                 // aggregate all products per window, and return the distinct product IDs
                 // per sale.
