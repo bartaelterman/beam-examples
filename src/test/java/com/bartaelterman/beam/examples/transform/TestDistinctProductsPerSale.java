@@ -8,6 +8,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.testing.TestPipelineOptions;
 import org.apache.beam.sdk.testing.TestStream;
+import org.apache.beam.sdk.transforms.windowing.IntervalWindow;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TimestampedValue;
@@ -38,18 +39,25 @@ public class TestDistinctProductsPerSale {
                 TimestampedValue.of("campaign1 product2", new Instant(0)),
                 TimestampedValue.of("campaign1 product3", new Instant(0))
         )
-                .advanceWatermarkTo(new Instant(700)) // watermark passes trigger time
+                .advanceWatermarkTo(new Instant(700000)) // watermark passes trigger time
         .addElements(
-                TimestampedValue.of("campaign1 product9", new Instant(710))
+                TimestampedValue.of("campaign1 product9", new Instant(710000))
         )
         .advanceWatermarkToInfinity();
 
         PCollection<KV<String, String>> results = applyDistinctProductsTransform(pipeline, onTimeProducts);
 
-        PAssert.that(results).containsInAnyOrder(
-                KV.of("campaign1", "product1,product2,product3"),
-                KV.of("campaign1", "product9")
+        IntervalWindow window1 = new IntervalWindow(new Instant(0), new Instant(600000));
+        IntervalWindow window2 = new IntervalWindow(new Instant(710000), new Instant(1310000));
+
+        PAssert.that(results).inWindow(window1).containsInAnyOrder(
+                KV.of("campaign1", "product1,product2,product3")
         );
+
+        PAssert.that(results).inWindow(window2).containsInAnyOrder(
+            KV.of("campaign1", "product9")
+        );
+
         pipeline.run().waitUntilFinish();
     }
 
